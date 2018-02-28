@@ -4,6 +4,6 @@ module.exports = function(app) {
 
   // Coordinates Routes
   app.route('/get_orders')
-    .post(orders.get_orders);
+    .get(orders.get_orders);
 
 };

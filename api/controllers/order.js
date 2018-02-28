@@ -1,6 +1,7 @@
 'use strict';
 
 const mysql = require('mysql');
+const _ = require('lodash');
 
 // First you need to create a connection to the db
 const con = mysql.createConnection({
@@ -12,17 +13,6 @@ const con = mysql.createConnection({
 
 exports.get_orders = function(req, res){
   
-  var response = {
-    statusCode: err ? '400' : '200',
-    body: err ? err.message || err : JSON.stringify(success),
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  };
-  return callback(null, response);
-  res.setHeader('Content-Type', 'application/json');
-  res.send(err ? err : success);
-  
   console.log(req.body);
   var req_params = req.body;
 
@@ -33,13 +23,23 @@ exports.get_orders = function(req, res){
     }
     console.log('Connection established');
   });
-  
+
   //If blank check in Aurora DB
   con.query('SELECT id,vStatus from udel.orders order by created_at desc limit 20', function (err, rows) {
     if (err){
       console.log("Error while receiving data from Aurora DB", err);
+      res.setHeader('Content-Type', 'application/json');
+      res.send({code: 400, message: `Error : ${err.message}`, data: {orders: []}});
     }else{
-      console.log('Data received from Db:\n', rows);
+      console.log('Data received from Db:\n');
+      let json = _.map(rows).map(function(x) {
+        return {
+          id: x.id,
+          status: x.vStatus
+        };
+      });
+      res.setHeader('Content-Type', 'application/json');
+      res.send({code: 200, message: "Success", data: {orders: json}});
     }
   });
 
